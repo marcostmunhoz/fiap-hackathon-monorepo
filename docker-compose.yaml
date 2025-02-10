@@ -1,0 +1,43 @@
+services:
+  monolith:
+    build:
+      context: monolith
+      dockerfile: docker/app/Dockerfile
+      target: development
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+    ports:
+      - '80:8080'
+    volumes:
+      - ./monolith:/var/www/html
+    depends_on:
+      - db
+    restart: 'unless-stopped'
+
+  worker:
+    build:
+      context: worker
+      dockerfile: docker/app/Dockerfile
+      target: development
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+    volumes:
+      - ./worker:/var/www/html
+      - ./monolith/storage/app/videos:/var/www/html/storage/app/videos
+    depends_on:
+      - db
+    restart: 'unless-stopped'
+
+  db:
+    build:
+      context: docker/db
+    ports:
+      - '3306:3306'
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: 'unless-stopped'
+
+volumes:
+  db-data:

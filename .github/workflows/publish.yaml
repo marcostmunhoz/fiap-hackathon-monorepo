@@ -1,0 +1,47 @@
+name: 'Publish'
+
+on:
+  push:
+    branches: [ 'main' ]
+  pull_request:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Decode terraform.tfvars
+        run: |
+          echo "${{ secrets.TF_VARS_BASE64 }}" | base64 --decode > terraform.tfvars
+
+      - name: Terraform Init
+        run: terraform init --backend-config="encryption_key=${{ secrets.TF_ENCRYPTION_KEY }}"
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Terraform Plan
+        run: terraform plan -var-file=terraform.tfvars
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+#      - name: Terraform Apply
+#        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#        run: terraform apply -auto-approve -var-file=terraform.tfvars
+#        env:
+#          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
