@@ -1,0 +1,6 @@
+[submodule "worker"]
+	path = worker
+	url = git@github.com:marcostmunhoz/fiap-hackathon-worker.git
+[submodule "monolith"]
+	path = monolith
+	url = git@github.com:marcostmunhoz/fiap-hackathon-monolith.git
